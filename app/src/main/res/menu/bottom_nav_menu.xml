@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="Home" />
+
+    <item
+        android:id="@+id/nav_assignments"
+        android:icon="@drawable/ic_assignment"
+        android:title="Assignments" />
+
+    <item
+        android:id="@+id/nav_exam"
+        android:icon="@drawable/ic_exam"
+        android:title="Exams" />
+
+    <item
+        android:id="@+id/nav_notes"
+        android:icon="@drawable/ic_note"
+        android:title="Notes" />
+
+    <item
+        android:id="@+id/nav_recording"
+        android:icon="@drawable/ic_mic"
+        android:title="Recording" />
+</menu>

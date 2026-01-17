@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FocusU</string>
+    <!-- Your existing strings -->
+
+    <!-- ADD THESE STRINGS FOR THE NOTES SCREEN -->
+    <string name="back_button">Back Button</string>
+    <string name="my_notes">My Notes</string>
+    <string name="no_notes_yet">No notes yet</string>
+    <string name="add_new_note">Add New Note</string>
+</resources>

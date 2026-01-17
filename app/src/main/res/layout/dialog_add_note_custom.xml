@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Note"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/editNoteTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Title"
+        android:background="@android:drawable/edit_text"/>
+
+    <EditText
+        android:id="@+id/editNoteContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Type your notes here..."
+        android:minLines="3"
+        android:gravity="top"
+        android:layout_marginTop="12dp"
+        android:background="@android:drawable/edit_text"/>
+
+    <Button
+        android:id="@+id/btnScanNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scan / Take Photo"
+        android:layout_marginTop="12dp"
+        android:drawableStart="@android:drawable/ic_menu_camera"/>
+
+    <ImageView
+        android:id="@+id/imgDialogPreview"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:scaleType="centerCrop"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"/>
+
+</LinearLayout>
