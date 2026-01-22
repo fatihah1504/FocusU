@@ -43,8 +43,7 @@ public class RecordingsAdapter extends RecyclerView.Adapter<RecordingsAdapter.Vi
 
         long minutes = TimeUnit.MILLISECONDS.toMinutes(recording.getDuration());
         long seconds = TimeUnit.MILLISECONDS.toSeconds(recording.getDuration()) % 60;
-        String durationText = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
-
+        String durationText = String.format(Locale.getDefault(), "%dm %ds", minutes, seconds);
         String metaText = recording.getDate() + " • " + durationText;
         holder.meta.setText(metaText);
 

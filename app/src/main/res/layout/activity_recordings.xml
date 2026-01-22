@@ -50,7 +50,7 @@
             android:id="@+id/subtitleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0 recordings • 0m total"
+            android:text="0 recordings • 0m 0 sec total "
             android:textColor="#E0E0E0"
             android:textSize="14sp"
             app:layout_constraintStart_toStartOf="@id/pageTitle"

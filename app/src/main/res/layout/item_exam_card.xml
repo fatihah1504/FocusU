@@ -68,7 +68,8 @@
             app:drawableTint="?attr/colorControlNormal"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/examDateTime"
-            tools:text="Room 101, Building A" />
+            tools:text="Room 101, Building A"
+            />
 
         <!-- Edit & Delete Buttons -->
         <ImageView

@@ -51,37 +51,48 @@ public class AssignmentsAdapter extends RecyclerView.Adapter<AssignmentsAdapter.
         holder.subject.setText(assignment.getSubject());
         holder.dueDate.setText("Due: " + assignment.getDueDate());
 
+        // 1. USE THE CORRECT FORMAT (Assignments use dd-MM-yyyy)
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
         Date dueDate = null;
         try {
-            dueDate = dateFormat.parse(assignment.getDueDate());
+            dueDate = sdf.parse(assignment.getDueDate());
         } catch (ParseException e) {
             e.printStackTrace();
         }
 
-        // --- TIME LEFT / STATUS CALCULATION ---
-        if ("Done".equals(assignment.getDbStatus())) {
-            holder.timeLeft.setText("Completed");
-            holder.timeLeft.setTextColor(Color.parseColor("#388E3C")); // Green
-        } else if (dueDate != null) {
+        // 2. EXACT CALCULATION FROM EXAMS ADAPTER
+        if (dueDate != null) {
+            // We subtract the current time from the due date
             long diffInMillis = dueDate.getTime() - Calendar.getInstance().getTimeInMillis();
-            long diffInDays = TimeUnit.MILLISECONDS.toDays(diffInMillis) + 1; // +1 to be more intuitive
+            long diffInDays = TimeUnit.MILLISECONDS.toDays(diffInMillis);
 
-            if (diffInDays < 0) {
+            // Handle the "Done" status first
+            if ("Done".equals(assignment.getDbStatus())) {
+                holder.timeLeft.setText("Completed");
+                holder.timeLeft.setTextColor(Color.parseColor("#388E3C")); // Green
+            }
+            // Logic exactly like Exams:
+            else if (diffInDays < -1) {
                 holder.timeLeft.setText("Overdue");
                 holder.timeLeft.setTextColor(Color.RED);
+            } else if (diffInDays == -1) {
+                holder.timeLeft.setText("Yesterday");
+                holder.timeLeft.setTextColor(Color.GRAY);
             } else if (diffInDays == 0) {
-                holder.timeLeft.setText("Due Today");
+                holder.timeLeft.setText("Today");
                 holder.timeLeft.setTextColor(Color.BLUE);
             } else if (diffInDays == 1) {
-                holder.timeLeft.setText("Due Tomorrow");
+                holder.timeLeft.setText("Tomorrow");
                 holder.timeLeft.setTextColor(Color.parseColor("#F57C00")); // Orange
             } else {
                 holder.timeLeft.setText(diffInDays + " days left");
                 holder.timeLeft.setTextColor(Color.DKGRAY);
             }
         } else {
-            holder.timeLeft.setText(""); // Clear if date is invalid
+            holder.timeLeft.setText("");
         }
+
+
 
         // --- PRIORITY CHIP STYLING ---
         String priority = assignment.getPriority();

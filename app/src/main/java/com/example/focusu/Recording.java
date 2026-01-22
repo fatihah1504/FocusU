@@ -82,6 +82,7 @@ public class Recording {
     private boolean isPlaying = false;
 
 
+
     public boolean isPlaying() {
         return isPlaying;
     }

@@ -44,6 +44,8 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.ViewHolder> 
         holder.date.setText(note.getDate());
         holder.content.setText(note.getContent());
 
+        android.text.util.Linkify.addLinks(holder.content, android.text.util.Linkify.WEB_URLS);
+
         holder.image.setVisibility(View.GONE);
         holder.fileAttachmentInfo.setVisibility(View.GONE);
 
@@ -74,7 +76,6 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.ViewHolder> 
             }
         }
 
-        // 3. General Action Listeners
         holder.btnEdit.setOnClickListener(v -> listener.onEditClick(note));
         holder.btnDelete.setOnClickListener(v -> listener.onDeleteClick(note));
         holder.itemView.setOnClickListener(v -> listener.onEditClick(note));

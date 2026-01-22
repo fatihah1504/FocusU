@@ -30,6 +30,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FocusU"
         tools:targetApi="31">
+        <activity
+            android:name=".QRScannerActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -79,5 +83,9 @@
         android:exported="false"
         android:theme="@style/Theme.AppCompat.NoActionBar" />
     </application>
+    <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="YOUR_ACTUAL_API_KEY_HERE" />
+
 
 </manifest>

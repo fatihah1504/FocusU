@@ -3,6 +3,7 @@ package com.example.focusu;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -44,28 +45,31 @@ public class Assignment {
     public String getPriority() { return priority; }
 
 
-    // Status Logic: Returns "Done", "Overdue", or "Upcoming"
     public String getCalculatedStatus() {
         if ("Done".equals(status)) {
             return "Done";
         }
 
-        // Check if date is passed
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        // Must match dd-MM-yyyy
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
         try {
-            Date date = sdf.parse(dueDate);
-            Date today = new Date();
-            // Reset time part of today for accurate comparison
+            Date dueDateObj = sdf.parse(dueDate);
 
-            if (date != null && date.before(new Date(System.currentTimeMillis() - 86400000))) {
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+
+            if (dueDateObj != null && dueDateObj.before(cal.getTime())) {
                 return "Overdue";
             }
         } catch (ParseException e) {
-            e.printStackTrace();
+            return "Upcoming";
         }
-
         return "Upcoming";
     }
+
 
     // This is the raw status from DB ("Pending" or "Done")
     public String getDbStatus() {

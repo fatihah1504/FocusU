@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class RecordingsActivity extends AppCompatActivity {
 
@@ -66,6 +67,8 @@ public class RecordingsActivity extends AppCompatActivity {
     // Media Playback
     private MediaPlayer mediaPlayer;
     private Recording currentlyPlaying = null;
+
+    private long totalDurationMs = 0;
 
     // Permissions Launcher
     private final ActivityResultLauncher<String> requestPermissionLauncher =
@@ -201,25 +204,40 @@ public class RecordingsActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 recordingList.clear();
+                totalDurationMs = 0;
+
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Recording recording = snapshot.getValue(Recording.class);
                     if (recording != null) {
                         recording.setId(snapshot.getKey());
                         recordingList.add(recording);
+                        totalDurationMs += recording.getDuration();
                     }
                 }
+
+                // --- 1. CALCULATE TIME ---
+                // We use totalDurationMs (milliseconds)
+                long totalSecondsAll = totalDurationMs / 1000;
+                long m = totalSecondsAll / 60;
+                long s = totalSecondsAll % 60;
+                String subtitle = recordingList.size() + " recordings • " + m + "m " + s + "s total";
+
+                // --- SET THE TEXT ---
+                binding.subtitleText.setText(subtitle);
+
+
+                // Refresh UI components
                 filter(binding.searchView.getQuery().toString());
                 applySortAndRefresh();
-
                 updateUI();
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e(TAG, "Error loading recordings", databaseError.toException());
             }
         });
     }
-
 
     private void toggleRecording() {
         if (isRecording) {

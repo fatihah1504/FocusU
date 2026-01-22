@@ -41,32 +41,61 @@
                 android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Attachment Buttons -->
+        <!-- Action Buttons Row -->
+        <!-- Action Buttons Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
             android:orientation="horizontal">
 
-            <Button
+            <!-- Take Photo Button -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnScanNote"
-                style="?attr/materialButtonOutlinedStyle"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="Take Photo"
-                app:icon="@drawable/ic_camera" />
+                android:layout_marginEnd="4dp"
+                android:text="Photo"
+                android:textSize="12sp"
+                app:icon="@drawable/ic_camera"
+                app:iconGravity="top"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp" />
 
-            <Button
-                android:id="@+id/btnAttachFile"
-                style="?attr/materialButtonOutlinedStyle"
+            <!-- Scan QR Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScanQR"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
                 android:layout_weight="1"
-                android:text="Attach File"
-                app:icon="@drawable/ic_attach_file" />
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:text="QR Code"
+                android:textSize="12sp"
+                app:icon="@drawable/ic_qr"
+                app:iconGravity="top"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp" />
+
+            <!-- Attach PDF Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAttachFile"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="PDF"
+                android:textSize="12sp"
+                app:icon="@drawable/ic_attach_file"
+                app:iconGravity="top"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp" />
+
         </LinearLayout>
 
         <ImageView

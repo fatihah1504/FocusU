@@ -95,6 +95,16 @@ public class NotesActivity extends AppCompatActivity {
             }
     );
 
+    private final ActivityResultLauncher<Intent> qrScannerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    String scannedUrl = result.getData().getStringExtra("SCANNED_QR_TEXT");
+
+                    showAddOrUpdateNoteDialog(null, scannedUrl);                }
+            }
+    );
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,23 +129,20 @@ public class NotesActivity extends AppCompatActivity {
         binding.sortChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (!checkedIds.isEmpty()) {
                 int checkedId = checkedIds.get(0);
-                // If Title chip is selected, sortByTitle is true, otherwise false
                 sortByTitle = (checkedId == R.id.chipSortTitle);
 
-                // Refresh the list with the new sort order
                 filter(binding.searchView.getQuery().toString());
             }
         });
         binding.btnBack.setOnClickListener(v -> finish());
-        binding.fabAddNote.setOnClickListener(v -> showAddOrUpdateNoteDialog(null));
-    }
+        binding.fabAddNote.setOnClickListener(v -> showAddOrUpdateNoteDialog(null, null));    }
 
     private void setupRecyclerView() {
         binding.notesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new NotesAdapter(filteredNotesList, new NotesAdapter.OnItemClickListener() {
             @Override
             public void onEditClick(Note note) {
-                showAddOrUpdateNoteDialog(note);
+                showAddOrUpdateNoteDialog(note, null);
             }
 
             @Override
@@ -162,6 +169,28 @@ public class NotesActivity extends AppCompatActivity {
         binding.notesRecyclerView.setAdapter(adapter);
     }
 
+    private void processQrCode(Bitmap bitmap, EditText editContent) {
+        com.google.mlkit.vision.common.InputImage image = com.google.mlkit.vision.common.InputImage.fromBitmap(bitmap, 0);
+
+        // Correct scanner initialization
+        com.google.mlkit.vision.barcode.BarcodeScanner scanner = com.google.mlkit.vision.barcode.BarcodeScanning.getClient();
+
+        scanner.process(image)
+                .addOnSuccessListener(barcodes -> {
+                    // Use the ML Kit Barcode class: com.google.mlkit.vision.barcode.common.Barcode
+                    for (com.google.mlkit.vision.barcode.common.Barcode barcode : barcodes) {
+                        String rawValue = barcode.getRawValue();
+                        if (rawValue != null) {
+                            String currentText = editContent.getText().toString();
+                            editContent.setText(currentText + "\n\nResource Link: " + rawValue);
+                            Toast.makeText(this, "URL Added!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to read QR code", Toast.LENGTH_SHORT).show();
+                });
+    }
     private void openDocument(File file) {
         try {
             Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".provider", file);
@@ -205,31 +234,41 @@ public class NotesActivity extends AppCompatActivity {
         });
     }
 
-    private void showAddOrUpdateNoteDialog(final Note noteToUpdate) {
+    private void showAddOrUpdateNoteDialog(Note note, String scannedUrl) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_add_note, null);
         builder.setView(view);
 
         EditText editTitle = view.findViewById(R.id.editNoteTitle);
         EditText editContent = view.findViewById(R.id.editNoteContent);
-        Button btnAttach = view.findViewById(R.id.btnAttachFile);
-        Button btnScan = view.findViewById(R.id.btnScanNote);
         dialogPreviewImage = view.findViewById(R.id.imgDialogPreview);
+        Button btnScan = view.findViewById(R.id.btnScanNote);
+        Button btnScanQR = view.findViewById(R.id.btnScanQR);
 
-        final boolean isUpdating = noteToUpdate != null;
+        Button btnAttachFile = view.findViewById(R.id.btnAttachFile);
 
-        if (isUpdating) {
-            editTitle.setText(noteToUpdate.getTitle());
-            editContent.setText(noteToUpdate.getContent());
-            tempImageUriString = noteToUpdate.getImagePath();
+        btnAttachFile.setOnClickListener(v -> {
+            filePickerLauncher.launch("application/pdf");
+        });
+
+        if (note != null) {
+            editTitle.setText(note.getTitle());
+            editContent.setText(note.getContent());
+            tempImageUriString = note.getImagePath();
+            updateDialogAttachmentView();
+        } else {
+            tempImageUriString = null;
+
+            if (scannedUrl != null) {
+                editContent.setText("Resource Link: " + scannedUrl);
+            }
             updateDialogAttachmentView();
         }
 
-        btnAttach.setOnClickListener(v -> filePickerLauncher.launch("*/*"));
         btnScan.setOnClickListener(v -> checkCameraPermissionAndLaunch());
+        btnScanQR.setOnClickListener(v -> checkCameraPermissionAndLaunchForQR());
 
-        // --- USE THESE BUTTONS INSTEAD ---
-        builder.setPositiveButton(isUpdating ? "Update" : "Save", (dialog, which) -> {
+        builder.setPositiveButton(note == null ? "Save" : "Update", (dialog, which) -> {
             String title = editTitle.getText().toString().trim();
             String content = editContent.getText().toString().trim();
 
@@ -237,25 +276,41 @@ public class NotesActivity extends AppCompatActivity {
                 Toast.makeText(this, "Title Required", Toast.LENGTH_SHORT).show();
                 return;
             }
+
             String currentDate = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(new Date());
-            String id = isUpdating ? noteToUpdate.getId() : db.child("notes").push().getKey();
-            Note note = new Note(id, userId, title, content, tempImageUriString, currentDate, System.currentTimeMillis());
-            note.setImagePath(tempImageUriString);
 
-
-            if (id != null) {
-                db.child("notes").child(id).setValue(note).addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, isUpdating ? "Note Updated" : "Note Saved", Toast.LENGTH_SHORT).show();
-                }).addOnFailureListener(e -> {
-                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+            if (note == null) {
+                // Create New Note
+                String id = db.child("notes").push().getKey();
+                Note newNote = new Note(id, userId, title, content, tempImageUriString, currentDate, System.currentTimeMillis());
+                if (id != null) {
+                    db.child("notes").child(id).setValue(newNote);
+                }
+            } else {
+                note.setTitle(title);
+                note.setContent(content);
+                note.setImagePath(tempImageUriString);
+                note.setDate(currentDate);
+                db.child("notes").child(note.getId()).setValue(note);
             }
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-
         builder.create().show();
     }
+
+
+
+    private void checkCameraPermissionAndLaunchForQR() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            // Replace QRScannerActivity.class with your actual QR scanning activity
+            Intent intent = new Intent(this, QRScannerActivity.class);
+            qrScannerLauncher.launch(intent);
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+    }
+
 
     private void updateDialogAttachmentView() {
         if (tempImageUriString == null || tempImageUriString.isEmpty()) {

@@ -1,12 +1,16 @@
 package com.example.focusu;
 
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.chip.Chip;
@@ -52,6 +56,29 @@ public class ExamsAdapter extends RecyclerView.Adapter<ExamsAdapter.ViewHolder> 
         holder.type.setText(exam.getType());
         holder.location.setText(exam.getLocation());
 
+        String locationText = exam.getLocation();
+        if (locationText != null && !locationText.isEmpty()) {
+            android.text.SpannableString content = new android.text.SpannableString(locationText);
+            content.setSpan(new android.text.style.UnderlineSpan(), 0, locationText.length(), 0);
+
+            holder.location.setText(content);
+
+            holder.location.setTextColor(android.graphics.Color.BLUE);
+        } else {
+            holder.location.setText("No Location");
+        }
+
+        holder.location.setOnClickListener(v -> {
+            Uri gmmIntentUri = Uri.parse("geo:0,0?q=" + Uri.encode(exam.getLocation()));
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+            mapIntent.setPackage("com.google.android.apps.maps");
+
+            try {
+                v.getContext().startActivity(mapIntent);
+            } catch (Exception e) {
+                Toast.makeText(v.getContext(), "Google Maps not installed", Toast.LENGTH_SHORT).show();
+            }
+        });
         Date examDate = null;
         try {
             examDate = dbFormat.parse(exam.getDate());

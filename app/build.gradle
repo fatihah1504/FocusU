@@ -36,7 +36,8 @@ dependencies {
 
     implementation platform('com.google.firebase:firebase-bom:33.1.0')
     implementation 'com.google.firebase:firebase-auth'
-//    implementation 'com.google.firebase:firebase-storage'
+    implementation libs.barcode.scanning
+    implementation libs.vision.common
     implementation 'com.google.firebase:firebase-database'
     implementation 'com.google.android.material:material:1.11.0'
     implementation libs.appcompat
@@ -44,6 +45,8 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
     implementation libs.camera.camera2.pipe
+    implementation libs.places
+    implementation libs.vision.common
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
@@ -52,4 +55,8 @@ dependencies {
     implementation "androidx.work:work-runtime:2.9.0"
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'com.google.guava:guava:33.1.0-android'
+    implementation libs.camera.core
+    implementation libs.camera.camera2
+    implementation libs.camera.lifecycle
+    implementation libs.camera.view
 }

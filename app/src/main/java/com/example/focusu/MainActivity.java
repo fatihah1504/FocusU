@@ -126,78 +126,84 @@ public class MainActivity extends AppCompatActivity {
         final PopupWindow popupWindow = new PopupWindow(popupView, width, height, true);
         popupWindow.setElevation(20);
 
-        // --- MODIFICATION: Use the new PopupReminderItem model ---
         List<PopupReminderItem> reminders = new ArrayList<>();
         NotificationPopupAdapter popupAdapter = new NotificationPopupAdapter(reminders);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(popupAdapter);
 
-        // --- Fetch Data from Firebase ---
+        // --- SETUP DATE FORMATS ---
+        // Note: Assignment uses dd-MM-yyyy while Exam uses yyyy-MM-dd
+        SimpleDateFormat assignmentFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+        SimpleDateFormat examFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String todayDate = dbFormat.format(calendar.getTime());
+
+        // Today's dates in both formats
+        String todayAssignment = assignmentFormat.format(calendar.getTime());
+        String todayExam = examFormat.format(calendar.getTime());
+
+        // Tomorrow's dates in both formats
         calendar.add(Calendar.DAY_OF_YEAR, 1);
-        String tomorrowDate = dbFormat.format(calendar.getTime());
+        String tomorrowAssignment = assignmentFormat.format(calendar.getTime());
+        String tomorrowExam = examFormat.format(calendar.getTime());
 
         // 1. Fetch Assignments
-        Query assignmentsQuery = db.child("assignments").orderByChild("userId").equalTo(userId);
-        assignmentsQuery.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Assignment assignment = snapshot.getValue(Assignment.class);
-                    if (assignment != null && assignment.getDueDate() != null && !"Done".equals(assignment.getDbStatus())) {
-                        //same like exams
-                        if (assignment.getDueDate().equals(todayDate)) {
-                            String title = assignment.getSubject() + " (" + assignment.getTitle() + ")";
-                            String subtitle ="Due Today";
-                            reminders.add(new PopupReminderItem(title, subtitle, "assignment"));
+        db.child("assignments").orderByChild("userId").equalTo(userId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            Assignment assignment = snapshot.getValue(Assignment.class);
+                            // Only show if not marked "Done"
+                            if (assignment != null && assignment.getDueDate() != null && !"Done".equals(assignment.getDbStatus())) {
 
-                        } else if (assignment.getDueDate().equals(tomorrowDate)) {
-                            String title = assignment.getSubject() + " (" + assignment.getTitle() + ")";
-                            String subtitle = "Due Tomorrow";
-                            reminders.add(new PopupReminderItem(title, subtitle, "assignment"));
-
-
+                                if (assignment.getDueDate().equals(todayAssignment)) {
+                                    String title = assignment.getSubject() + "  (" + assignment.getTitle() + ")";
+                                    reminders.add(new PopupReminderItem(title, "Due Today", "assignment"));
+                                } else if (assignment.getDueDate().equals(tomorrowAssignment)) {
+                                    String title = assignment.getSubject() + "  (" + assignment.getTitle()+ ")";
+                                    reminders.add(new PopupReminderItem(title, "Due Tomorrow", "assignment"));
+                                }
+                            }
                         }
+                        popupAdapter.notifyDataSetChanged();
+                        updatePopupUI(reminders, noNotificationsText, recyclerView);
                     }
-                }
-                popupAdapter.notifyDataSetChanged();
-                updatePopupUI(reminders, noNotificationsText, recyclerView);
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
 
         // 2. Fetch Exams
-        Query examsQuery = db.child("exams").orderByChild("userId").equalTo(userId);
-        examsQuery.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Exam exam = snapshot.getValue(Exam.class);
-                    if (exam != null && exam.getDate() != null) {
-                        if (exam.getDate().equals(todayDate)) {
-                            // --- NEW: Create a PopupReminderItem ---
-                            String title = exam.getSubject() + " (" + exam.getType() + ")";
-                            String subtitle = "Today at " + exam.getTime();
-                            reminders.add(new PopupReminderItem(title, subtitle, "exam"));
-                        } else if (exam.getDate().equals(tomorrowDate)) {
-                            String title = exam.getSubject() + " (" + exam.getType() + ")";
-                            String subtitle = "Tomorrow at " + exam.getTime();
-                            reminders.add(new PopupReminderItem(title, subtitle, "exam"));
-                        }
-                    }
-                }
-                Collections.sort(reminders, Comparator.comparing(PopupReminderItem::getSubtitle)); // Sort for consistency
-                popupAdapter.notifyDataSetChanged();
-                updatePopupUI(reminders, noNotificationsText, recyclerView);
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
+        db.child("exams").orderByChild("userId").equalTo(userId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            Exam exam = snapshot.getValue(Exam.class);
+                            if (exam != null && exam.getDate() != null) {
 
+                                if (exam.getDate().equals(todayExam)) {
+                                    String title = exam.getSubject() + "  (" + exam.getType() + ")";
+                                    reminders.add(new PopupReminderItem(title, "Today at " + exam.getTime(), "exam"));
+                                } else if (exam.getDate().equals(tomorrowExam)) {
+                                    String title = exam.getSubject() + "  (" + exam.getType() + ")";
+                                    reminders.add(new PopupReminderItem(title, "Tomorrow at " + exam.getTime(), "exam"));
+                                }
+                            }
+                        }
+                        // Sort so Assignments and Exams are mixed naturally
+                        Collections.sort(reminders, (o1, o2) -> o1.getSubtitle().compareTo(o2.getSubtitle()));
+                        popupAdapter.notifyDataSetChanged();
+                        updatePopupUI(reminders, noNotificationsText, recyclerView);
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+
+        // Show the popup near the notification icon
         popupWindow.showAsDropDown(binding.notificationIcon, -width / 2 + binding.notificationIcon.getWidth() / 2, 0);
 
+        // Handle auto-dismiss logic
         if (autoDismiss) {
             autoDismissHandler.postDelayed(() -> {
                 if (popupWindow.isShowing()) {
@@ -206,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
             }, 6000);
         }
     }
+
 
 
     private void updatePopupUI(List<PopupReminderItem> reminders, TextView noNotificationsText, RecyclerView recyclerView) {
